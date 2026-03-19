@@ -8,7 +8,7 @@ If any case fails, the CLI exits non-zero — so you can use it to **gate CI**.
 
 - Full writeup: [`WRITEUP.md`](./WRITEUP.md)
 
-## Goals (v1)
+## Current goals
 - Run YAML-defined eval suites locally and in CI
 - Deterministic checks first (JSON schema / required keys / regex / allowed values)
 - Optional rubric scoring (LLM-as-judge) as an add-on (later)
