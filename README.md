@@ -1,5 +1,9 @@
 # kestrel-evals
 
+[![ci](https://github.com/KestrelLabs/kl-evals/actions/workflows/ci.yml/badge.svg)](https://github.com/KestrelLabs/kl-evals/actions/workflows/ci.yml)
+[![evals](https://github.com/KestrelLabs/kl-evals/actions/workflows/evals.yml/badge.svg)](https://github.com/KestrelLabs/kl-evals/actions/workflows/evals.yml)
+[![evals results](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/KestrelLabs/kl-evals/master/badges/evals.json)](https://github.com/KestrelLabs/kl-evals/actions/workflows/evals.yml)
+
 A minimal LLM evaluation harness focused on **deterministic gating first**.
 
 It runs YAML-defined eval suites (locally and in CI), executes the prompt(s), and then applies **deterministic checks** (schema/required keys/regex/allowed values) to decide pass/fail.

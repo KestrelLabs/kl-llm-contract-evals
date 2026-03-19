@@ -12,6 +12,10 @@ on:
         required: true
         default: "gpt-4.1-mini"
 
+# Needed to commit + push the badge endpoint JSON.
+permissions:
+  contents: write
+
 jobs:
   run-evals:
     runs-on: ubuntu-latest
@@ -48,3 +52,46 @@ jobs:
         with:
           name: report
           path: reports/report.json
+
+      - name: Generate badge endpoint JSON
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path('reports/report.json').read_text(encoding='utf-8'))
+          total = int(report['summary']['total'])
+          failed = int(report['summary']['failed'])
+          passed = total - failed
+
+          if failed == 0:
+            color = 'brightgreen'
+          elif passed == 0:
+            color = 'red'
+          else:
+            color = 'orange'
+
+          badge = {
+            'schemaVersion': 1,
+            'label': 'evals',
+            'message': f'{passed}/{total} pass',
+            'color': color,
+          }
+
+          Path('badges').mkdir(parents=True, exist_ok=True)
+          Path('badges/evals.json').write_text(json.dumps(badge), encoding='utf-8')
+          print(badge)
+          PY
+
+      - name: Publish badge JSON to repo
+        run: |
+          if [ -z "$(git status --porcelain badges/evals.json)" ]; then
+            echo "No badge changes"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add badges/evals.json
+          git commit -m "Update evals badge"
+          git push
