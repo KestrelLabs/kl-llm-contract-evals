@@ -42,18 +42,22 @@ jobs:
           fi
 
       - name: Run suite
+        id: run_suite
+        continue-on-error: true
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           kestrel-evals run "${{ inputs.suite }}" --model "${{ inputs.model }}" --out reports/report.json
 
       - name: Upload report
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: report
           path: reports/report.json
 
       - name: Generate badge endpoint JSON
+        if: ${{ always() }}
         env:
           MODEL: ${{ inputs.model }}
         run: |
@@ -62,26 +66,36 @@ jobs:
           import os
           from pathlib import Path
 
-          report = json.loads(Path('reports/report.json').read_text(encoding='utf-8'))
-          total = int(report['summary']['total'])
-          failed = int(report['summary']['failed'])
-          passed = total - failed
+          report_path = Path('reports/report.json')
 
           model = (os.getenv('MODEL') or '').strip() or 'model?'
 
-          if failed == 0:
-            color = 'brightgreen'
-          elif passed == 0:
-            color = 'red'
+          if not report_path.exists():
+            badge = {
+              'schemaVersion': 1,
+              'label': 'evals',
+              'message': f'{model} · error',
+              'color': 'red',
+            }
           else:
-            color = 'orange'
+            report = json.loads(report_path.read_text(encoding='utf-8'))
+            total = int(report['summary']['total'])
+            failed = int(report['summary']['failed'])
+            passed = total - failed
 
-          badge = {
-            'schemaVersion': 1,
-            'label': 'evals',
-            'message': f'{model} · {passed}/{total} pass',
-            'color': color,
-          }
+            if failed == 0:
+              color = 'brightgreen'
+            elif passed == 0:
+              color = 'red'
+            else:
+              color = 'orange'
+
+            badge = {
+              'schemaVersion': 1,
+              'label': 'evals',
+              'message': f'{model} · {passed}/{total} pass',
+              'color': color,
+            }
 
           Path('badges').mkdir(parents=True, exist_ok=True)
           Path('badges/evals.json').write_text(json.dumps(badge), encoding='utf-8')
@@ -89,6 +103,7 @@ jobs:
           PY
 
       - name: Publish badge JSON to repo
+        if: ${{ always() }}
         run: |
           if [ -z "$(git status --porcelain badges/evals.json)" ]; then
             echo "No badge changes"
@@ -100,3 +115,23 @@ jobs:
           git add badges/evals.json
           git commit -m "Update evals badge"
           git push
+
+      - name: Gate workflow on eval failures
+        if: ${{ always() }}
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          p = Path('reports/report.json')
+          if not p.exists():
+            raise SystemExit('report.json missing; treating as failure')
+
+          report = json.loads(p.read_text(encoding='utf-8'))
+          failed = int(report['summary']['failed'])
+          total = int(report['summary']['total'])
+          if failed > 0:
+            raise SystemExit(f"Eval failures: {failed}/{total}")
+
+          print(f"All passing: {total}/{total}")
+          PY
