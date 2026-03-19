@@ -1,0 +1,189 @@
+{
+  "suite": {
+    "name": "Sales lead intake extraction",
+    "description": "Extract a consistent JSON payload from messy inbound lead emails. Deterministic scoring for CI gating."
+  },
+  "model": "gpt-4.1-mini",
+  "summary": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0
+  },
+  "cases": [
+    {
+      "id": "basic_new_site",
+      "passed": true,
+      "checks": [
+        {
+          "type": "json_schema",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "type": "allowed_values",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "type": "regex",
+          "ok": true,
+          "detail": "ok"
+        }
+      ],
+      "output_text": "{\"lead_name\":\"Jordan Lee\",\"lead_email\":\"jordan@example.com\",\"company\":\"\",\"budget\":\"flexible\",\"timeline\":\"next month\",\"project_type\":\"website redesign with booking form\",\"summary\":\"Looking to redesign our website and add a booking form.\",\"services\":[\"website_upgrade\"]}"
+    },
+    {
+      "id": "signature_block",
+      "passed": true,
+      "checks": [
+        {
+          "type": "json_schema",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "type": "allowed_values",
+          "ok": true,
+          "detail": "ok"
+        }
+      ],
+      "output_text": "{\"lead_name\":\"Priya N.\",\"lead_email\":\"priya.n@example.org\",\"company\":\"\",\"budget\":\"\",\"timeline\":\"\",\"project_type\":\"\",\"summary\":\"Help improving site speed and converting more traffic.\",\"services\":[\"performance_scaling\",\"conversion_optimization\"]}"
+    },
+    {
+      "id": "website_upgrade_and_maintenance",
+      "passed": true,
+      "checks": [
+        {
+          "type": "json_schema",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "type": "allowed_values",
+          "ok": true,
+          "detail": "ok"
+        }
+      ],
+      "output_text": "{\"lead_name\":\"Morgan\",\"lead_email\":\"morgan@acme.co\",\"company\":\"\",\"budget\":\"\",\"timeline\":\"\",\"project_type\":\"\",\"summary\":\"Requesting a quote for a website upgrade and ongoing maintenance.\",\"services\":[\"website_upgrade\",\"maintenance_retainer\"]}"
+    },
+    {
+      "id": "cms_setup",
+      "passed": true,
+      "checks": [
+        {
+          "type": "json_schema",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "type": "allowed_values",
+          "ok": true,
+          "detail": "ok"
+        }
+      ],
+      "output_text": "{\"lead_name\":\"Taylor Kim\",\"lead_email\":\"taylor.kim@foo.bar\",\"company\":\"FooBar Logistics\",\"budget\":\"\",\"timeline\":\"\",\"project_type\":\"landing page + contact form + a CMS\",\"summary\":\"Looking to build a landing page with a contact form and a CMS that can be updated internally.\",\"services\":[\"website_rebuild\",\"cms_setup\"]}"
+    },
+    {
+      "id": "budget_and_timeline",
+      "passed": true,
+      "checks": [
+        {
+          "type": "json_schema",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "type": "allowed_values",
+          "ok": true,
+          "detail": "ok"
+        }
+      ],
+      "output_text": "{\"lead_name\":\"Casey\",\"lead_email\":\"casey@startup.io\",\"company\":\"\",\"budget\":\"around $8-12k\",\"timeline\":\"3-4 weeks\",\"project_type\":\"marketing site\",\"summary\":\"Need a small marketing site for a product launch.\",\"services\":[\"website_rebuild\"]}"
+    },
+    {
+      "id": "ai_rnd_and_evals",
+      "passed": true,
+      "checks": [
+        {
+          "type": "json_schema",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "type": "allowed_values",
+          "ok": true,
+          "detail": "ok"
+        }
+      ],
+      "output_text": "{\"lead_name\":\"Drew\",\"lead_email\":\"drew@client.com\",\"company\":\"\",\"budget\":\"\",\"timeline\":\"\",\"project_type\":\"LLM feature for support team\",\"summary\":\"Exploring an LLM feature for support team, needs quick R&D spike and evaluation of outputs in CI.\",\"services\":[\"ai_rnd\",\"llm_evals\"]}"
+    },
+    {
+      "id": "devops_platform",
+      "passed": true,
+      "checks": [
+        {
+          "type": "json_schema",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "type": "allowed_values",
+          "ok": true,
+          "detail": "ok"
+        }
+      ],
+      "output_text": "{\"lead_name\":\"Val\",\"lead_email\":\"val+ops@company.com\",\"company\":\"\",\"budget\":\"\",\"timeline\":\"\",\"project_type\":\"\",\"summary\":\"Help setting up CI/CD and better observability.\",\"services\":[\"devops_platform\",\"observability\"]}"
+    },
+    {
+      "id": "security_review",
+      "passed": true,
+      "checks": [
+        {
+          "type": "json_schema",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "type": "allowed_values",
+          "ok": true,
+          "detail": "ok"
+        }
+      ],
+      "output_text": "{\"lead_name\":\"Harper\",\"lead_email\":\"harper@agency.dev\",\"company\":\"\",\"budget\":\"\",\"timeline\":\"\",\"project_type\":\"application security review\",\"summary\":\"Request for an application security review and assistance with hardening authentication and permissions.\",\"services\":[\"security_review\",\"appsec_hardening\",\"authn_authz\"]}"
+    },
+    {
+      "id": "fractional_cto",
+      "passed": true,
+      "checks": [
+        {
+          "type": "json_schema",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "type": "allowed_values",
+          "ok": true,
+          "detail": "ok"
+        }
+      ],
+      "output_text": "{\"lead_name\":\"Sky\",\"lead_email\":\"sky@client.io\",\"company\":\"\",\"budget\":\"\",\"timeline\":\"\",\"project_type\":\"\",\"summary\":\"Small team needs fractional CTO help and an architecture review.\",\"services\":[\"fractional_cto\",\"architecture_review\"]}"
+    },
+    {
+      "id": "very_short",
+      "passed": true,
+      "checks": [
+        {
+          "type": "json_schema",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "type": "allowed_values",
+          "ok": true,
+          "detail": "ok"
+        }
+      ],
+      "output_text": "{\"lead_name\":\"Pat\",\"lead_email\":\"pat@x.com\",\"company\":\"\",\"budget\":\"\",\"timeline\":\"\",\"project_type\":\"website\",\"summary\":\"Need a website quote.\",\"services\":[\"website_rebuild\"]}"
+    }
+  ]
+}
