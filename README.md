@@ -1,8 +1,8 @@
 # kestrel-evals
 
-[![ci](https://github.com/KestrelLabs/kl-evals/actions/workflows/ci.yml/badge.svg)](https://github.com/KestrelLabs/kl-evals/actions/workflows/ci.yml)
-[![evals](https://github.com/KestrelLabs/kl-evals/actions/workflows/evals.yml/badge.svg)](https://github.com/KestrelLabs/kl-evals/actions/workflows/evals.yml)
-[![evals results](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/KestrelLabs/kl-evals/master/badges/evals.json&cacheSeconds=60)](https://github.com/KestrelLabs/kl-evals/actions/workflows/evals.yml)
+[![ci](https://github.com/KestrelLabs/kl-llm-contract-evals/actions/workflows/ci.yml/badge.svg)](https://github.com/KestrelLabs/kl-llm-contract-evals/actions/workflows/ci.yml)
+[![evals](https://github.com/KestrelLabs/kl-llm-contract-evals/actions/workflows/evals.yml/badge.svg)](https://github.com/KestrelLabs/kl-llm-contract-evals/actions/workflows/evals.yml)
+[![evals results](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/KestrelLabs/kl-llm-contract-evals/master/badges/evals.json&cacheSeconds=60)](https://github.com/KestrelLabs/kl-llm-contract-evals/actions/workflows/evals.yml)
 
 A **small evaluation harness** for generating **empirical evidence** about whether an LLM reliably satisfies a *contract*.
 
