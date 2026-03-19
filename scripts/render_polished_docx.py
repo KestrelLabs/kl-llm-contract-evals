@@ -3,12 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 import re
+import tempfile
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
+from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 INPUT = ROOT / "WRITEUP.md"
@@ -17,6 +19,8 @@ OUTPUT = ROOT / "WRITEUP_polished.docx"
 BODY_FONT = "Times New Roman"
 SANS_FONT = "Aptos"
 MONO_FONT = "Consolas"
+AUTHOR_NAME = "Daymian"
+ORG_NAME = "Kestrel Labs"
 
 
 @dataclass
@@ -228,6 +232,92 @@ def parse_blocks(text: str) -> list[object]:
     return blocks
 
 
+def load_font(size: int, bold: bool = False):
+    candidates = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf",
+        "/usr/share/fonts/truetype/liberation2/LiberationSerif-Bold.ttf" if bold else "/usr/share/fonts/truetype/liberation2/LiberationSerif-Regular.ttf",
+    ]
+    for path in candidates:
+        try:
+            return ImageFont.truetype(path, size=size)
+        except Exception:
+            continue
+    return ImageFont.load_default()
+
+
+def create_architecture_figure(output_path: Path) -> None:
+    width, height = 1500, 620
+    bg = (255, 255, 255)
+    ink = (32, 32, 32)
+    border = (110, 110, 110)
+    accent = (239, 243, 251)
+
+    img = Image.new("RGB", (width, height), bg)
+    draw = ImageDraw.Draw(img)
+    box_font = load_font(22, bold=True)
+    small_font = load_font(18, bold=False)
+    title_font = load_font(26, bold=True)
+
+    draw.text((60, 28), "Figure 1. Architecture overview", fill=ink, font=title_font)
+
+    boxes = [
+        ((60, 110, 330, 200), "Suite YAML\nexamples/structured_extraction.yaml"),
+        ((400, 110, 640, 200), "suite_loader.py\nvalidated EvalSuite"),
+        ((710, 110, 910, 200), "runner.py"),
+        ((980, 110, 1200, 200), "OpenAIProvider\n(generate)"),
+        ((1270, 110, 1435, 200), "LLM output"),
+        ((980, 320, 1200, 420), "checks.py\njson_schema\nallowed_values\nregex"),
+        ((1270, 320, 1435, 420), "JSON report"),
+        ((1270, 485, 1435, 570), "CLI exit code / CI gate"),
+    ]
+
+    def center_text(box, text, font):
+        x1, y1, x2, y2 = box
+        lines = text.split("\n")
+        total_h = sum(font.getbbox(line)[3] - font.getbbox(line)[1] for line in lines) + 8 * (len(lines) - 1)
+        y = y1 + ((y2 - y1) - total_h) / 2
+        for line in lines:
+            bbox = font.getbbox(line)
+            w = bbox[2] - bbox[0]
+            h = bbox[3] - bbox[1]
+            x = x1 + ((x2 - x1) - w) / 2
+            draw.text((x, y), line, fill=ink, font=font)
+            y += h + 8
+
+    for box, text in boxes:
+        draw.rounded_rectangle(box, radius=16, outline=border, width=3, fill=accent)
+        center_text(box, text, box_font)
+
+    def arrow(start, end):
+        draw.line([start, end], fill=border, width=4)
+        dx = end[0] - start[0]
+        dy = end[1] - start[1]
+        if abs(dx) >= abs(dy):
+            if dx >= 0:
+                pts = [(end[0], end[1]), (end[0] - 14, end[1] - 8), (end[0] - 14, end[1] + 8)]
+            else:
+                pts = [(end[0], end[1]), (end[0] + 14, end[1] - 8), (end[0] + 14, end[1] + 8)]
+        else:
+            if dy >= 0:
+                pts = [(end[0], end[1]), (end[0] - 8, end[1] - 14), (end[0] + 8, end[1] - 14)]
+            else:
+                pts = [(end[0], end[1]), (end[0] - 8, end[1] + 14), (end[0] + 8, end[1] + 14)]
+        draw.polygon(pts, fill=border)
+
+    arrow((330, 155), (400, 155))
+    arrow((640, 155), (710, 155))
+    arrow((910, 155), (980, 155))
+    arrow((1200, 155), (1270, 155))
+    arrow((1090, 200), (1090, 320))
+    arrow((1200, 370), (1270, 370))
+    arrow((1350, 420), (1350, 485))
+
+    draw.text((1000, 255), "deterministic validation", fill=ink, font=small_font)
+    draw.text((1215, 520), "non-zero on failure", fill=ink, font=small_font)
+
+    img.save(output_path)
+
+
 def style_document(doc: Document) -> None:
     section = doc.sections[0]
     section.top_margin = Inches(1.0)
@@ -267,8 +357,8 @@ def style_document(doc: Document) -> None:
 def add_title_page(doc: Document, title: str) -> None:
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p.paragraph_format.space_before = Pt(80)
-    p.paragraph_format.space_after = Pt(18)
+    p.paragraph_format.space_before = Pt(72)
+    p.paragraph_format.space_after = Pt(14)
     r = p.add_run(title)
     r.bold = True
     r.font.name = BODY_FONT
@@ -284,11 +374,24 @@ def add_title_page(doc: Document, title: str) -> None:
 
     p3 = doc.add_paragraph()
     p3.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p3.paragraph_format.space_before = Pt(12)
-    r3 = p3.add_run("Kestrel Labs\nMarch 2026")
+    p3.paragraph_format.space_before = Pt(28)
+    r3 = p3.add_run(AUTHOR_NAME)
     r3.font.name = BODY_FONT
-    r3.font.size = Pt(10.5)
-    r3.font.color.rgb = RGBColor(96, 96, 96)
+    r3.font.size = Pt(11.5)
+    r3.bold = True
+
+    p4 = doc.add_paragraph()
+    p4.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r4 = p4.add_run(ORG_NAME)
+    r4.font.name = BODY_FONT
+    r4.font.size = Pt(11)
+
+    p5 = doc.add_paragraph()
+    p5.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r5 = p5.add_run("March 2026")
+    r5.font.name = BODY_FONT
+    r5.font.size = Pt(10.5)
+    r5.font.color.rgb = RGBColor(96, 96, 96)
 
     doc.add_page_break()
 
@@ -297,10 +400,9 @@ def render_bluf(doc: Document, block: BlufBlock) -> None:
     table = doc.add_table(rows=1, cols=1)
     table.style = "Table Grid"
     cell = table.cell(0, 0)
-    set_cell_shading(cell, "F3F6FB")
+    set_cell_shading(cell, "F5F7FB")
 
     p = cell.paragraphs[0]
-    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
     r = p.add_run("BLUF")
     r.bold = True
     r.font.name = BODY_FONT
@@ -316,6 +418,7 @@ def render_bluf(doc: Document, block: BlufBlock) -> None:
         elif isinstance(inner, BulletBlock):
             for item in inner.items:
                 p = cell.add_paragraph(style="List Bullet")
+                p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
                 r = p.add_run(item)
                 r.font.name = BODY_FONT
                 r.font.size = Pt(10.5)
@@ -362,15 +465,21 @@ def render_bullets(doc: Document, block: BulletBlock) -> None:
         r.font.size = Pt(10.5)
 
 
-def render_code(doc: Document, block: CodeBlock) -> None:
+def render_code(doc: Document, block: CodeBlock, tmpdir: Path) -> None:
     if block.language == "mermaid":
+        figure_path = tmpdir / "architecture_diagram.png"
+        create_architecture_figure(figure_path)
         p = doc.add_paragraph()
-        p.paragraph_format.space_after = Pt(3)
-        r = p.add_run("Architecture diagram (Mermaid source retained in Word draft)")
-        r.bold = True
-        r.font.name = SANS_FONT
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.add_run().add_picture(str(figure_path), width=Inches(6.4))
+        cap = doc.add_paragraph()
+        cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        cap.paragraph_format.space_after = Pt(10)
+        r = cap.add_run("Figure 1. Architecture overview")
+        r.font.name = BODY_FONT
         r.font.size = Pt(10)
-        r.font.color.rgb = RGBColor(96, 96, 96)
+        r.italic = True
+        return
 
     for line in block.content.splitlines() or [""]:
         p = doc.add_paragraph()
@@ -398,7 +507,7 @@ def render_table(doc: Document, block: TableBlock) -> None:
             text = row[j] if j < len(row) else ""
             cell = table.cell(i, j)
             if i == 0:
-                set_cell_shading(cell, "EDEDED")
+                set_cell_shading(cell, "EFEFEF")
             cell.text = text
             for p in cell.paragraphs:
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
@@ -421,23 +530,25 @@ def main() -> None:
     style_document(doc)
     add_title_page(doc, title)
 
-    for block in blocks[1:]:
-        if isinstance(block, BlufBlock):
-            render_bluf(doc, block)
-        elif isinstance(block, HeadingBlock):
-            render_heading(doc, block)
-        elif isinstance(block, ParagraphBlock):
-            render_paragraph(doc, block.text)
-        elif isinstance(block, BulletBlock):
-            render_bullets(doc, block)
-        elif isinstance(block, CodeBlock):
-            render_code(doc, block)
-        elif isinstance(block, TableBlock):
-            render_table(doc, block)
-        elif isinstance(block, RuleBlock):
-            doc.add_paragraph()
+    with tempfile.TemporaryDirectory() as td:
+        tmpdir = Path(td)
+        for block in blocks[1:]:
+            if isinstance(block, BlufBlock):
+                render_bluf(doc, block)
+            elif isinstance(block, HeadingBlock):
+                render_heading(doc, block)
+            elif isinstance(block, ParagraphBlock):
+                render_paragraph(doc, block.text)
+            elif isinstance(block, BulletBlock):
+                render_bullets(doc, block)
+            elif isinstance(block, CodeBlock):
+                render_code(doc, block, tmpdir)
+            elif isinstance(block, TableBlock):
+                render_table(doc, block)
+            elif isinstance(block, RuleBlock):
+                doc.add_paragraph()
 
-    doc.save(OUTPUT)
+        doc.save(OUTPUT)
     print(f"Wrote {OUTPUT}")
 
 
