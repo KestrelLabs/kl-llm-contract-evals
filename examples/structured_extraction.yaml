@@ -1,0 +1,267 @@
+name: "Sales lead intake extraction"
+description: "Extract a consistent JSON payload from messy inbound lead emails. Deterministic scoring for CI gating."
+
+# Output contract (v1)
+# Required keys:
+# - lead_name (string)
+# - lead_email (string)
+# - summary (string)
+# - services (array of strings; may be empty)
+# Optional keys (still required to exist; empty string when unknown):
+# - company (string)
+# - budget (string)
+# - timeline (string)
+# - project_type (string)
+#
+# Rules:
+# - Return ONLY valid JSON (no markdown, no extra text).
+# - Return ALL keys. Use empty string for unknown values.
+# - `services` must contain ONLY values from the allowed list below.
+
+allowed_services: &allowed_services
+  - discovery_scoping
+  - mvp_build
+  - web_app_build
+  - mobile_app_build
+  - api_backend_build
+  - internal_tools
+  - integration_work
+  - legacy_modernization
+  - performance_scaling
+  - maintenance_retainer
+  - ai_rnd
+  - llm_app_build
+  - llm_evals
+  - rag_implementation
+  - data_pipelines_etl
+  - analytics_instrumentation
+  - mlops_deployment
+  - devops_platform
+  - observability
+  - reliability_slo
+  - cloud_migration
+  - cost_optimization
+  - security_review
+  - appsec_hardening
+  - threat_modeling
+  - authn_authz
+  - secrets_key_management
+  - website_upgrade
+  - website_rebuild
+  - cms_setup
+  - conversion_optimization
+  - fractional_cto
+  - architecture_review
+  - code_review
+  - team_enablement
+
+cases:
+  - id: "basic_new_site"
+    prompt:
+      system: |
+        You are a careful information extraction system.
+        Return ONLY valid JSON. No markdown. No extra text.
+        Return ALL keys. Use empty string for unknown values.
+        Choose `services` only from the allowed list.
+      user: |
+        Extract lead fields from the email into this JSON shape:
+        {lead_name, lead_email, company, budget, timeline, project_type, summary, services}
+
+        Allowed services:
+        - discovery_scoping, mvp_build, web_app_build, mobile_app_build, api_backend_build, internal_tools,
+          integration_work, legacy_modernization, performance_scaling, maintenance_retainer,
+          ai_rnd, llm_app_build, llm_evals, rag_implementation, data_pipelines_etl, analytics_instrumentation,
+          mlops_deployment, devops_platform, observability, reliability_slo, cloud_migration, cost_optimization,
+          security_review, appsec_hardening, threat_modeling, authn_authz, secrets_key_management,
+          website_upgrade, website_rebuild, cms_setup, conversion_optimization,
+          fractional_cto, architecture_review, code_review, team_enablement.
+
+        Email:
+        ---
+        Hi, this is Jordan Lee (jordan@example.com). We're looking to redesign our website and add a booking form.
+        Timeline: next month.
+        Budget is flexible.
+        ---
+    checks:
+      - type: required_keys
+        keys: [lead_name, lead_email, company, budget, timeline, project_type, summary, services]
+      - type: allowed_values
+        path: services
+        allowed: *allowed_services
+      - type: regex
+        pattern: '"lead_email"\s*:\s*"[^"]+@[^\"]+"'
+
+  - id: "signature_block"
+    prompt:
+      system: |
+        Return ONLY valid JSON. Return ALL keys.
+      user: |
+        Extract lead fields and choose services from the allowed list.
+
+        Email:
+        ---
+        Hello,
+        We need help improving our site speed and converting more traffic.
+
+        Thanks,
+        Priya N.
+        priya.n@example.org
+        ---
+    checks:
+      - type: required_keys
+        keys: [lead_name, lead_email, company, budget, timeline, project_type, summary, services]
+      - type: allowed_values
+        path: services
+        allowed: *allowed_services
+
+  - id: "website_upgrade_and_maintenance"
+    prompt:
+      system: |
+        Return ONLY valid JSON. Return ALL keys.
+      user: |
+        Extract lead fields.
+
+        Email:
+        ---
+        CC'ing Alex and Sam.
+        Hi, I'm Morgan (morgan@acme.co) — can you quote a website upgrade and ongoing maintenance?
+        ---
+    checks:
+      - type: required_keys
+        keys: [lead_name, lead_email, company, budget, timeline, project_type, summary, services]
+      - type: allowed_values
+        path: services
+        allowed: *allowed_services
+
+  - id: "cms_setup"
+    prompt:
+      system: |
+        Return ONLY valid JSON. Return ALL keys.
+      user: |
+        Extract lead fields.
+
+        Email:
+        ---
+        Name: Taylor Kim
+        Email: taylor.kim@foo.bar
+        Company: FooBar Logistics
+        Looking for: landing page + contact form + a CMS we can update ourselves
+        ---
+    checks:
+      - type: required_keys
+        keys: [lead_name, lead_email, company, budget, timeline, project_type, summary, services]
+      - type: allowed_values
+        path: services
+        allowed: *allowed_services
+
+  - id: "budget_and_timeline"
+    prompt:
+      system: |
+        Return ONLY valid JSON. Return ALL keys.
+      user: |
+        Extract lead fields.
+
+        Email:
+        ---
+        Hey—I'm Casey (casey@startup.io). We need a small marketing site for a product launch.
+        Budget: around $8-12k.
+        Timeline: 3-4 weeks.
+        ---
+    checks:
+      - type: required_keys
+        keys: [lead_name, lead_email, company, budget, timeline, project_type, summary, services]
+      - type: allowed_values
+        path: services
+        allowed: *allowed_services
+
+  - id: "ai_rnd_and_evals"
+    prompt:
+      system: |
+        Return ONLY valid JSON. Return ALL keys.
+      user: |
+        Extract lead fields.
+
+        Email:
+        ---
+        Hi, I'm Drew (drew@client.com). We're exploring an LLM feature for our support team.
+        We need a quick R&D spike and a way to evaluate outputs in CI.
+        ---
+    checks:
+      - type: required_keys
+        keys: [lead_name, lead_email, company, budget, timeline, project_type, summary, services]
+      - type: allowed_values
+        path: services
+        allowed: *allowed_services
+
+  - id: "devops_platform"
+    prompt:
+      system: |
+        Return ONLY valid JSON. Return ALL keys.
+      user: |
+        Extract lead fields.
+
+        Email:
+        ---
+        Hi, this is Val (val+ops@company.com). We want help setting up CI/CD and better observability.
+        ---
+    checks:
+      - type: required_keys
+        keys: [lead_name, lead_email, company, budget, timeline, project_type, summary, services]
+      - type: allowed_values
+        path: services
+        allowed: *allowed_services
+
+  - id: "security_review"
+    prompt:
+      system: |
+        Return ONLY valid JSON. Return ALL keys.
+      user: |
+        Extract lead fields.
+
+        Email:
+        ---
+        From: "Harper" <harper@agency.dev>
+        Message: Can you do an application security review and help us harden auth/permissions?
+        ---
+    checks:
+      - type: required_keys
+        keys: [lead_name, lead_email, company, budget, timeline, project_type, summary, services]
+      - type: allowed_values
+        path: services
+        allowed: *allowed_services
+
+  - id: "fractional_cto"
+    prompt:
+      system: |
+        Return ONLY valid JSON. Return ALL keys.
+      user: |
+        Extract lead fields.
+
+        Email:
+        ---
+        Hi, I'm Sky (sky@client.io). We're a small team and need fractional CTO help and an architecture review.
+        ---
+    checks:
+      - type: required_keys
+        keys: [lead_name, lead_email, company, budget, timeline, project_type, summary, services]
+      - type: allowed_values
+        path: services
+        allowed: *allowed_services
+
+  - id: "very_short"
+    prompt:
+      system: |
+        Return ONLY valid JSON. Return ALL keys.
+      user: |
+        Extract lead fields.
+
+        Email:
+        ---
+        Pat (pat@x.com) — need a website quote.
+        ---
+    checks:
+      - type: required_keys
+        keys: [lead_name, lead_email, company, budget, timeline, project_type, summary, services]
+      - type: allowed_values
+        path: services
+        allowed: *allowed_services
