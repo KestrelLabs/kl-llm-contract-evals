@@ -15,10 +15,13 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parents[1]
 INPUT = ROOT / "WRITEUP.md"
 OUTPUT = ROOT / "WRITEUP_polished.docx"
+LOGO_PATH = ROOT.parents[1] / "brand/logo/png/icon-512.png"
 
 BODY_FONT = "Times New Roman"
 MONO_FONT = "Consolas"
+PAPER_SUBTITLE = "The kestrel-evals Initial Implementation"
 AUTHOR_NAME = "Daymian Tomczyk"
+AUTHOR_TITLE = "Founder & Principal Engineer"
 ORG_NAME = "Kestrel Labs"
 
 
@@ -375,33 +378,46 @@ def style_document(doc: Document) -> None:
 
 
 def add_title_page(doc: Document, title: str) -> None:
+    if LOGO_PATH.exists():
+        logo_p = doc.add_paragraph()
+        logo_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        logo_p.paragraph_format.space_before = Pt(42)
+        logo_run = logo_p.add_run()
+        logo_run.add_picture(str(LOGO_PATH), width=Inches(0.8))
+
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p.paragraph_format.space_before = Pt(72)
-    p.paragraph_format.space_after = Pt(14)
+    p.paragraph_format.space_before = Pt(18)
+    p.paragraph_format.space_after = Pt(10)
     r = p.add_run(title)
     apply_run_font(r, BODY_FONT, 18, bold=True)
 
     p2 = doc.add_paragraph()
     p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r2 = p2.add_run("Initial implementation / working paper draft")
+    p2.paragraph_format.space_after = Pt(6)
+    r2 = p2.add_run(PAPER_SUBTITLE)
     apply_run_font(r2, BODY_FONT, 11, italic=True, color=RGBColor(96, 96, 96))
 
     p3 = doc.add_paragraph()
     p3.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p3.paragraph_format.space_before = Pt(28)
+    p3.paragraph_format.space_before = Pt(30)
     r3 = p3.add_run(AUTHOR_NAME)
     apply_run_font(r3, BODY_FONT, 11, bold=True)
 
     p4 = doc.add_paragraph()
     p4.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r4 = p4.add_run(ORG_NAME)
-    apply_run_font(r4, BODY_FONT, 11)
+    r4 = p4.add_run(AUTHOR_TITLE)
+    apply_run_font(r4, BODY_FONT, 10, color=RGBColor(64, 64, 64))
 
     p5 = doc.add_paragraph()
     p5.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r5 = p5.add_run("March 2026")
-    apply_run_font(r5, BODY_FONT, 10, color=RGBColor(96, 96, 96))
+    r5 = p5.add_run(ORG_NAME)
+    apply_run_font(r5, BODY_FONT, 11)
+
+    p6 = doc.add_paragraph()
+    p6.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r6 = p6.add_run("March 2026")
+    apply_run_font(r6, BODY_FONT, 10, color=RGBColor(96, 96, 96))
 
     doc.add_page_break()
 

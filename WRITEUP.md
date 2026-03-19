@@ -1,4 +1,4 @@
-# kestrel-evals — Deterministic LLM Gating (Initial Implementation)
+# Deterministic Gating for Contract-Bound LLM Outputs
 
 ## BLUF
 If an LLM feature depends on a structured output contract, that contract should be testable in the same operational way as ordinary software: with deterministic checks, repeatable suites, and CI failure when the output breaks.
