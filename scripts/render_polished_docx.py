@@ -19,7 +19,7 @@ OUTPUT = ROOT / "WRITEUP_polished.docx"
 BODY_FONT = "Times New Roman"
 SANS_FONT = "Aptos"
 MONO_FONT = "Consolas"
-AUTHOR_NAME = "Daymian"
+AUTHOR_NAME = "Daymian Tomczyk"
 ORG_NAME = "Kestrel Labs"
 
 
