@@ -1,11 +1,25 @@
 name: evals
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: "Path to eval suite YAML"
+        required: true
+        default: "examples/structured_extraction.yaml"
+      model:
+        description: "Model name"
+        required: true
+        default: "gpt-4.1-mini"
 
 jobs:
   run-evals:
+    # Avoid failing normal CI when the repo doesn't have secrets configured yet.
+    # For workflow_dispatch runs, this will show as "skipped" until OPENAI_API_KEY is set.
+    if: ${{ secrets.OPENAI_API_KEY != '' }}
+
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -22,7 +36,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          kestrel-evals run examples/structured_extraction.yaml --model gpt-4.1-mini --out reports/report.json
+          kestrel-evals run "${{ inputs.suite }}" --model "${{ inputs.model }}" --out reports/report.json
 
       - name: Upload report
         uses: actions/upload-artifact@v4

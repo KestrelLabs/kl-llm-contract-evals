@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  sanity:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install (editable)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          python -m pip check
+
+      - name: Compile / import sanity
+        run: |
+          python -m compileall -q src/kestrel_evals
+          python -c "import kestrel_evals; print('kestrel_evals', kestrel_evals.__version__)"
+
+      - name: CLI help + version
+        run: |
+          kestrel-evals --help
+          kestrel-evals version
+
+      - name: Load example suite (no API calls)
+        run: |
+          python -c "from kestrel_evals.suite_loader import load_suite; s=load_suite('examples/structured_extraction.yaml'); print('loaded', s.name, 'cases', len(s.cases))"
